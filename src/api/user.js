@@ -1,13 +1,14 @@
-// import request from '@/utils/request'
+import request from '@/utils/request'
 
-export function login(data) {
-
+export const getUserInfoApi = () => {
+  return request({
+    url: '/sys/profile',
+    method: 'POST'
+  })
 }
 
-export function getInfo(token) {
-
-}
-
-export function logout() {
-
+export const getUserDetailById = (id) => {
+  return request({
+    url: `/sys/user/${id}`
+  })
 }

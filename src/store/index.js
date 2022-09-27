@@ -14,7 +14,10 @@ const store = new Vuex.Store({
       // paths: ['user.token']
       reducer(state) {
         return {
-          token: state.user.token
+          user: {
+            token: state.user.token,
+            loginTime: state.user.loginTime
+          }
         }
       }
     })
