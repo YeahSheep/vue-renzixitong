@@ -8,7 +8,7 @@ function checkTime() {
   // 获取当前时间
   const nowDate = Date.now()
   // 当前时间-登入的时间
-  const timeStamp = (nowDate - store.getters.loginTime) / 1000 / 60
+  const timeStamp = (nowDate - store.getters.loginTime) / 1000 / 60 / 60
   // 返回是否大于设置的过期时间
   return timeStamp > timeOut
 }
