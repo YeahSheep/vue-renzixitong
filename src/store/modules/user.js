@@ -30,7 +30,7 @@ export default {
   actions: {
     async LOGIN_ACTION({ commit }, loginFrom) {
       const data = await loginApi(loginFrom)
-      // console.log(data)
+      console.log(data)
       commit('SET_TOKEN', data)
       commit('SET_LOGINGTIME', +new Date())
     },

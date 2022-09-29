@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    title="新增角色"
+    :title="title"
     width="60%"
     :visible="dialogVisible"
     :before-close="handleClose"
@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { addRoleApi } from '@/api/setting'
+import { addRoleApi, updateRoleApi } from '@/api/setting'
 
 export default {
   props: {
@@ -53,18 +53,29 @@ export default {
       loading: false
     }
   },
+  computed: {
+    title() {
+      return this.roleForm.id ? '修改角色' : '新增角色'
+    }
+  },
   methods: {
     handleClose() {
       // 表单效果重置
       this.$refs.roleDialogForm.resetFields()
       this.$emit('update:dialogVisible', false)
+      // 取消时清空表单内容
+      this.roleForm = {}
     },
     async handleAdd() {
       try {
         await this.$refs.roleDialogForm.validate()
         this.loading = true
-        await addRoleApi(this.roleForm)
-        this.$message.success('角色新增成功')
+        this.roleForm.id
+          ? await updateRoleApi(this.roleForm)
+          : await addRoleApi(this.roleForm)
+        this.$message.success(
+          this.roleForm.id ? '修改角色成功' : '角色新增成功'
+        )
         this.$emit('refreshList')
         this.handleClose()
       } catch (e) {
