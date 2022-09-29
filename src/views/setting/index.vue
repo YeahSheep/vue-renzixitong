@@ -183,7 +183,7 @@ export default {
         await deleteRoleApi(id)
         this.getRoleList()
       } catch (error) {
-        console.log('失败')
+        // console.log('取消更改')
       }
     },
     async getComponentInfo() {
