@@ -1,6 +1,6 @@
 <template>
-  <!-- 新增部门的弹层 -->
-  <el-dialog title="新增部门" :visible="dialogVisible">
+  <!-- 新增编辑的弹层 -->
+  <el-dialog :title="showTitle" :visible="dialogVisible">
     <!-- 表单组件  el-form   label-width设置label的宽度   -->
     <!-- 匿名插槽 -->
     <el-form ref="addForm" label-width="120px" :model="formData" :rules="rules">
@@ -23,8 +23,14 @@
           v-model="formData.manager"
           style="width: 80%"
           placeholder="请选择"
+          @focus="getEmployeeSimple"
         >
-          <el-option label="username11" value="username" />
+          <el-option
+            v-for="item in peoples"
+            :key="item.id"
+            :label="item.username"
+            :value="item.username"
+          />
         </el-select>
       </el-form-item>
       <el-form-item label="部门介绍" prop="introduce">
@@ -41,7 +47,12 @@
     <el-row slot="footer" type="flex" justify="center">
       <!-- 列被分为24 -->
       <el-col :span="6">
-        <el-button type="primary" size="small">确定</el-button>
+        <el-button
+          v-loading="loading"
+          type="primary"
+          size="small"
+          @click="btnOK"
+        >确定</el-button>
         <el-button size="small" @click="handleClose">取消</el-button>
       </el-col>
     </el-row>
@@ -49,8 +60,12 @@
 </template>
 
 <script>
-import { getDepartmentsApi } from '@/api/departments'
-
+import {
+  getDepartmentsApi,
+  addDepartments,
+  updateDepartments
+} from '@/api/departments'
+import { getEmployeeSimple } from '@/api/employees'
 export default {
   props: {
     dialogVisible: {
@@ -63,21 +78,51 @@ export default {
     }
   },
   data() {
+    // 部门编码规则，在整个页面中不能重复
+    // 拿到所有的部门数据，一个一个的比较，如果出现重复的，则校验不通过
     const checkCode = async(rule, value, callback) => {
       const { depts } = await getDepartmentsApi()
-      const isRepat = depts.some((item) => item.code === value)
-      isRepat ? callback(new Error(`模块下已存在${value}编码`)) : callback()
+      // 校验结果初始值为通过
+      let isRepeat = true
+      // 如果是编辑状态,校验规则中需要排除自己
+      if (this.formData.id) {
+        isRepeat = depts.some(
+          // 如果遍历项的id=当前点击项的id,则不进行后面code的判断(短路运算)
+          (item) => item.id !== this.formData.id && item.code === value
+        )
+      } else {
+        // 新增状态只需要校验输入的code在整个页面中不重复
+        isRepeat = depts.some((ele) => ele.code === value)
+      }
+      isRepeat ? callback(new Error(`模块下已存在${value}编码`)) : callback()
     }
+
+    // 部门名称规则,需要支持两种 新增模式 / 编辑模式
     const checkName = async(rule, value, callback) => {
       const { depts } = await getDepartmentsApi()
-      //   如果传入的点击项id===获取数据pid，则把符合条件的数据筛选出来可以拿到点击项的子项
-      depts
-        .filter((item) => item.pid === this.currentNode.id)
-        .some((item) =>
-          item.name === value
-            ? callback(new Error(`模块下已存在${value}部门`))
-            : callback()
-        )
+      let isRepeat = true
+      if (this.formData.id) {
+        // 有id就是编辑模式
+        // 编辑 张三 => 校验规则 除了我之外 同级部门下 不能有叫张三的
+        isRepeat = depts
+          .filter(
+            // 编辑项的pid和遍历的pid相等的项则时同一个部门的子部门
+            // item.id !== this.formData.id用来排除自己
+            (item) =>
+              item.pid === this.formData.pid && item.id !== this.formData.id
+          )
+          .some((item) => item.name === value)
+        // console.log(isRepeat)
+      } else {
+        // 否则就是新增模式
+        //  新增时同级部门禁止出现重复的部门, 如果传入的点击项id===获取数据pid，则说明这些数据是一个父级下的
+        isRepeat = depts
+          // 找到当前父级下的同级部门返回一个新数组
+          .filter((item) => item.pid === this.currentNode.id)
+          // 进行筛选,如果输入的名字和父级中任意一个部门的名字相同则返回校验失败
+          .some((item) => item.name === value)
+      }
+      isRepeat ? callback(new Error(`模块下已存在${value}部门`)) : callback()
     }
     return {
       // 定义表单数据
@@ -110,15 +155,63 @@ export default {
           { required: true, message: '部门介绍必填', trigger: 'blur' },
           { min: 1, max: 300, message: '部门介绍1-300个字符', trigger: 'blur' }
         ]
-      }
+      },
+      peoples: [], // 获取的员工列表的数据
+      loading: false
+    }
+  },
+  computed: {
+    showTitle() {
+      return this.formData.id ? '编辑部门' : '新增新增'
     }
   },
   methods: {
     // 点击取消按钮，将false传回
     handleClose() {
       this.$emit('update:dialogVisible', false)
+      // resetFields校验结果恢复初始值(清空输入框)
       this.$refs.addForm.resetFields()
-      console.log(this.currentNode)
+      // 让formData恢复初始值
+      this.formData = {
+        name: '', // 部门名称
+        code: '', // 部门编码
+        manager: '', // 部门管理者
+        introduce: '' // 部门介绍
+      }
+    },
+    async getEmployeeSimple() {
+      const data = await getEmployeeSimple()
+      // console.log(data)
+      this.peoples = data
+    },
+
+    // 点击确定
+    async btnOK() {
+      // 表单进行校验，成功后调用接口
+      try {
+        await this.$refs.addForm.validate()
+        this.loading = true
+        if (this.formData.id) {
+          // 有id调用编辑接口
+          await updateDepartments(this.formData)
+        } else {
+          // 无id调用新增接口
+          await addDepartments({
+            ...this.formData,
+            pid: this.currentNode.id
+          })
+        }
+        // 接口调用成功后通知父组件重新渲染列表
+        this.$parent.getDepartments()
+        // 渲染成功弹出添加成功并关闭弹窗
+        this.handleClose()
+        this.$message.success(`${this.formData.id}?'编辑成功':'添加成功'`)
+      } catch (error) {
+        this.$message.error('添加失败')
+      } finally {
+        // 接口调用成功失败加载图标都要变为false
+        this.loading = false
+      }
     }
   }
 }

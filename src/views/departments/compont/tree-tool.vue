@@ -34,6 +34,7 @@
 </template>
 
 <script>
+import { delDepartments } from '@/api/departments'
 export default {
   props: {
     treeData: {
@@ -46,13 +47,21 @@ export default {
     }
   },
   methods: {
-    handleCommand(type) {
+    async handleCommand(type) {
       if (type === 'add') {
         this.$emit('addDept', this.treeData)
       } else if (type === 'edit') {
-        console.log(21)
+        this.$emit('editDept', this.treeData)
       } else {
-        console.log(21)
+        this.$confirm('是否确认删除该部门', '提示', { type: 'warning' })
+          .then((res) => {
+            // 点击确认调用删除接口
+            return delDepartments(this.treeData.id)
+          })
+          .then((res) => {
+            this.$message.success('删除成功')
+            this.$emit('getDepartments')
+          })
       }
     }
   }
