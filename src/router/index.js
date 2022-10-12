@@ -30,7 +30,6 @@ export const constantRoutes = [
     path: '/login',
     component: () => import('@/views/login/index'),
     hidden: true
-
   },
 
   {
@@ -49,6 +48,18 @@ export const constantRoutes = [
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index'),
         meta: { title: '首页', icon: 'dashboard' }
+      }
+    ]
+  },
+  {
+    path: '/input',
+    component: Layout,
+    children: [
+      {
+        path: '',
+        name: 'Input',
+        component: () => import('@/views/input'),
+        hidden: true
       }
     ]
   },
