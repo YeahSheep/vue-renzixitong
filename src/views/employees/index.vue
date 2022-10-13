@@ -56,7 +56,11 @@
             </el-table-column>
             <el-table-column label="操作" fixed="right" width="280">
               <template slot-scope="{ row }">
-                <el-button type="text" size="small">查看</el-button>
+                <el-button
+                  type="text"
+                  size="small"
+                  @click="goDetail(row)"
+                >查看</el-button>
                 <el-button type="text" size="small">转正</el-button>
                 <el-button type="text" size="small">调岗</el-button>
                 <el-button type="text" size="small">离职</el-button>
@@ -127,7 +131,7 @@ export default {
     formatEmployFn(row, column, cellValue) {
       // console.log(cellValue)
       const res = this.hireType.find((item) => item.id === parseInt(cellValue))
-      console.log(res)
+      // console.log(res)
       return res ? res.value : '未知'
     },
     handleEmploy() {
@@ -140,10 +144,10 @@ export default {
       // 1. 表单重置 2.表单绑定的值从新赋值
       this.isAdd = true
     },
-    async deleteEmployee(id) {
+    async deleteEmployee(row) {
       try {
         await this.$confirm('您确定删除该员工吗')
-        await delEmployee(id)
+        await delEmployee(row.id)
         this.getEmployeeList()
         this.$message.success('删除员工成功')
       } catch (error) {
@@ -154,7 +158,7 @@ export default {
       // 懒加载导入包，需要写成一个函数，返回是一个promise,可以通过成功回调拿到结果
       // 获取列表
       const { rows } = await getEmployeeList({ page: 1, size: this.total })
-      console.log(rows)
+      // console.log(rows)
       // 设置一个映射关系，对应列表的key
       const headerObj = {
         姓名: 'username',
@@ -187,6 +191,9 @@ export default {
         autoWidth: true, // 非必填
         bookType: 'xlsx' // 非必填
       })
+    },
+    goDetail(row) {
+      this.$router.push('employees/detail/' + row.id)
     }
   }
 }
