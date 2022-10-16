@@ -1,5 +1,9 @@
 <template>
   <div class="user-info">
+    <i
+      class="el-icon-printer"
+      @click="$router.push('/employees/print/' + userId + '?type=personal')"
+    />
     <!-- 个人信息 -->
     <el-form label-width="220px">
       <!-- 工号 入职时间 -->
@@ -58,6 +62,11 @@
         <el-col :span="12">
           <el-form-item label="员工头像">
             <!-- 放置上传图片 -->
+            <uploadImg
+              ref="updataimg"
+              :default-url="employeesImg"
+              @updataimg="updataEmployeesImg"
+            />
           </el-form-item>
         </el-col>
       </el-row>
@@ -91,6 +100,11 @@
 
         <el-form-item label="员工照片">
           <!-- 放置上传图片 -->
+          <uploadImg
+            ref="personalImg"
+            :default-url="personalImg"
+            @updataimg="updataPersonalImg"
+          />
         </el-form-item>
         <el-form-item label="国家/地区">
           <el-select v-model="formData.nationalArea" class="inputW2">
@@ -388,6 +402,7 @@
 <script>
 import EmployeeEnum from '@/api/constant/employees'
 import { getUserDetailById } from '@/api/user'
+
 import {
   getPersonalDetail,
   saveUserDetailById,
@@ -462,7 +477,9 @@ export default {
         isThereAnyCompetitionRestriction: '', // 有无竞业限制
         proofOfDepartureOfFormerCompany: '', // 前公司离职证明
         remarks: '' // 备注
-      }
+      },
+      employeesImg: '',
+      personalImg: ''
     }
   },
   created() {
@@ -470,31 +487,54 @@ export default {
     this.getPersonalDetail()
   },
   methods: {
+    // 上半部分信息
     async getUserDetailById() {
       const data = await getUserDetailById(this.$route.params.id)
       // console.log(data)
       this.userInfo = data
+      if (data.staffPhoto) {
+        this.employeesImg = data.staffPhoto
+      }
+      // console.log(data.staffPhoto)
     },
+    // 下半部分信息
     async getPersonalDetail() {
       const data = await getPersonalDetail(this.$route.params.id)
       // console.log(data)
       this.formData = data
+      if (data.staffPhoto) {
+        this.personalImg = data.staffPhoto
+      }
     },
+    // 上部分的保存
+    async saveUserDetail() {
+      try {
+        if (this.$refs.updataimg.loading) {
+          return this.$message.success('图片正在上传')
+        }
+        await saveUserDetailById(this.userInfo)
+        this.$message.success('更新成功')
+      } catch (error) {
+        this.$message.error('更新失败')
+      }
+    },
+    // 下部分的保存
     async updataInfo() {
       try {
+        if (this.$refs.personalImg.loading) {
+          return this.$message.success('图片正在上传')
+        }
         await updatePersonal(this.formData)
         this.$message.success('更新成功')
       } catch (error) {
         this.$message.error('更新失败')
       }
     },
-    async saveUserDetail() {
-      try {
-        await saveUserDetailById(this.userInfo)
-        this.$message.success('更新成功')
-      } catch (error) {
-        this.$message.error('更新失败')
-      }
+    updataEmployeesImg(imgURL) {
+      this.userInfo.staffPhoto = imgURL
+    },
+    updataPersonalImg(imgURL) {
+      this.formData.staffPhoto = imgURL
     }
   }
 }

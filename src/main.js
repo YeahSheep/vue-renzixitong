@@ -15,6 +15,9 @@ import router from './router'
 import '@/icons' // icon
 import '@/permission' // permission control
 
+import Print from 'vue-print-nb'
+Vue.use(Print)
+
 // 自定义指令
 import * as directives from '@/directives'
 // console.log(directives)

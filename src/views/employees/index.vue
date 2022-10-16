@@ -1,98 +1,108 @@
 <template>
-  <div>
-    <template>
-      <div class="app-container">
-        <PageTools>
-          <template #before>
-            <span>共{{ total }}条记录</span>
-          </template>
-          <template #after>
-            <el-button
-              size="small"
-              type="warning"
-              @click="$router.push('/input')"
-            >导入</el-button>
-            <el-button
-              size="small"
-              type="danger"
-              @click="exportExcel"
-            >导出</el-button>
-            <el-button
-              size="small"
-              type="primary"
-              @click="handleEmploy"
-            >新增员工</el-button>
-          </template>
-        </PageTools>
-        <!-- 新增弹出层 -->
-        <addEmployee :is-add.sync="isAdd" />
-        <!-- 放置表格和分页 -->
-        <el-card>
-          <el-table v-loading="loading" border :data="list">
-            <el-table-column label="序号" sortable="" width="80" type="index" />
-            <el-table-column label="姓名" prop="username" />
-            <el-table-column label="工号" prop="workNumber" />
-            <el-table-column
-              label="聘用形式"
-              prop="formOfEmployment"
-              :formatter="formatEmployFn"
-            />
-            <el-table-column label="部门" prop="departmentName" />
-            <el-table-column label="入职时间" sortable="" prop="timeOfEntry">
-              <template slot-scope="{ row }">
-                {{ row.timeOfEntry | formatDate }}
-              </template>
-            </el-table-column>
-            <el-table-column
-              label="账户状态"
-              align="center"
-              sortable=""
-              prop="enableState"
+  <div class="app-container">
+    <PageTools>
+      <template #before>
+        <span>共{{ total }}条记录</span>
+      </template>
+      <template #after>
+        <el-button
+          size="small"
+          type="warning"
+          @click="$router.push('/input')"
+        >导入</el-button>
+        <el-button
+          size="small"
+          type="danger"
+          @click="exportExcel"
+        >导出</el-button>
+        <el-button
+          size="small"
+          type="primary"
+          @click="handleEmploy"
+        >新增员工</el-button>
+      </template>
+    </PageTools>
+    <!-- 新增弹出层 -->
+    <addEmployee :is-add.sync="isAdd" />
+    <!-- 放置表格和分页 -->
+    <el-card>
+      <el-table v-loading="loading" border :data="list">
+        <el-table-column label="序号" sortable="" width="80" type="index" />
+        <el-table-column label="头像">
+          <template slot-scope="{ row }">
+            <img
+              style="width: 100px; height: 100px"
+              :src="row.staffPhoto"
+              alt=""
+              @click="showPic(row)"
             >
-              <template slot-scope="{ row }">
-                <!-- 根据当前状态来确定 是否打开开关 -->
-                <el-switch :value="row.enableState === 1" />
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" fixed="right" width="280">
-              <template slot-scope="{ row }">
-                <el-button
-                  type="text"
-                  size="small"
-                  @click="goDetail(row)"
-                >查看</el-button>
-                <el-button type="text" size="small">转正</el-button>
-                <el-button type="text" size="small">调岗</el-button>
-                <el-button type="text" size="small">离职</el-button>
-                <el-button type="text" size="small">角色</el-button>
-                <el-button
-                  type="text"
-                  size="small"
-                  @click="deleteEmployee(row)"
-                >删除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-          <!-- 分页组件 -->
-          <el-row type="flex" justify="end" align="middle" style="height: 60px">
-            <el-pagination
-              background
-              layout="prev, pager, next, sizes, total"
-              :current-page.sync="page.page"
-              :page-size.sync="page.size"
-              :page-sizes="[5, 10, 15, 20]"
-              :total="total"
-              @current-change="getEmployeeList"
-              @size-change="getEmployeeList"
-            />
-          </el-row>
-        </el-card>
-      </div>
-    </template>
+          </template>
+        </el-table-column>
+        <el-table-column label="姓名" prop="username" />
+        <el-table-column label="工号" prop="workNumber" />
+        <el-table-column
+          label="聘用形式"
+          prop="formOfEmployment"
+          :formatter="formatEmployFn"
+        />
+        <el-table-column label="部门" prop="departmentName" />
+        <el-table-column label="入职时间" sortable="" prop="timeOfEntry">
+          <template slot-scope="{ row }">
+            {{ row.timeOfEntry | formatDate }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="账户状态"
+          align="center"
+          sortable=""
+          prop="enableState"
+        >
+          <template slot-scope="{ row }">
+            <!-- 根据当前状态来确定 是否打开开关 -->
+            <el-switch :value="row.enableState === 1" />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" fixed="right" width="280">
+          <template slot-scope="{ row }">
+            <el-button
+              type="text"
+              size="small"
+              @click="goDetail(row)"
+            >查看</el-button>
+            <el-button type="text" size="small">转正</el-button>
+            <el-button type="text" size="small">调岗</el-button>
+            <el-button type="text" size="small">离职</el-button>
+            <el-button type="text" size="small">角色</el-button>
+            <el-button
+              type="text"
+              size="small"
+              @click="deleteEmployee(row)"
+            >删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <!-- 分页组件 -->
+      <el-row type="flex" justify="end" align="middle" style="height: 60px">
+        <el-pagination
+          background
+          layout="prev, pager, next, sizes, total"
+          :current-page.sync="page.page"
+          :page-size.sync="page.size"
+          :page-sizes="[5, 10, 15, 20]"
+          :total="total"
+          @current-change="getEmployeeList"
+          @size-change="getEmployeeList"
+        />
+      </el-row>
+    </el-card>
+    <el-dialog title="图片预览" :visible.sync="QRCode" width="50%">
+      <canvas ref="canvas" />
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import QRCode from 'qrcode'
 import addEmployee from '@/views/employees/compontents/add-employee.vue'
 import EnumHireType from '@/api/constant/employees'
 import { getEmployeeList, delEmployee } from '@/api/employees'
@@ -109,7 +119,9 @@ export default {
       total: 0, // 总数
       loading: false,
       hireType: EnumHireType.hireType,
-      isAdd: false
+      isAdd: false,
+      QRCode: false,
+      picUrl: ''
     }
   },
   created() {
@@ -194,6 +206,18 @@ export default {
     },
     goDetail(row) {
       this.$router.push('employees/detail/' + row.id)
+    },
+    showPic(row) {
+      if (!row.staffPhoto) {
+        return this.$message.error('暂无头像')
+      }
+      this.QRCode = true
+      this.$nextTick(() => {
+        QRCode.toCanvas(this.$refs.canvas, row.staffPhoto, function(error) {
+          if (error) console.error(error)
+          console.log('success!')
+        })
+      })
     }
   }
 }

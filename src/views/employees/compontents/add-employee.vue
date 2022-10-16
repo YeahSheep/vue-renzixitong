@@ -91,6 +91,7 @@ import employeesEnum from '@/api/constant/employees'
 import { getDepartmentsApi } from '@/api/departments'
 import { addEmployeeApi } from '@/api/employees'
 import { tranListToTreeData } from '@/utils'
+
 export default {
   name: 'HrsaasAddEmployee',
   props: {

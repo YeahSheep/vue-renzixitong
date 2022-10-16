@@ -1,6 +1,10 @@
 <template>
   <div class="job-info">
     <!-- 基础信息 -->
+    <i
+      class="el-icon-printer"
+      @click="$router.push('/employees/print/' + userId + '?type=job')"
+    />
     <el-form label-width="220px">
       <div class="block">
         <div class="title">基础信息</div>
